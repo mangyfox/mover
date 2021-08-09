@@ -194,6 +194,7 @@
 
 <div class="wrapper">
   <div class="debug">
+    <p><b>←→↑↓</b> Arrow keys to move</p>
     Elapsed: {(elapsed/1000).toFixed(2)}<br/>
     Sector: {currentSector + 1}<br/>
     Lap: {currentLap}<br/>

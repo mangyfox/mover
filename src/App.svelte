@@ -31,6 +31,8 @@
 		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
 	}
 
 	@media (min-width: 640px) {
