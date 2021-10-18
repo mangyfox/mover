@@ -1,3 +1,8 @@
+/**
+ * Class to manage keyboard controls.
+ *
+ * Key listeners update various properties that can be used by other apps.
+ */
 export default class ControlsHandler {
 
   constructor() {
@@ -14,6 +19,9 @@ export default class ControlsHandler {
     this.initListeners();
   }
 
+  /**
+   * Initialize the keyboard listeners.
+   */
   initListeners() {
     document.addEventListener('keydown', (event) => {
       const keyName = event.key;

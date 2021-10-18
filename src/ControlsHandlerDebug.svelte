@@ -1,4 +1,9 @@
 <script>
+
+  /**
+   * Debug component to test the ControlsHandler.
+   */
+
   export let controlsHandler;
 
   import { onMount } from 'svelte';
@@ -10,7 +15,6 @@
   let y = 0;
 
   onMount(() => {
-
     const ctx = canvas.getContext('2d');
 		let frame = requestAnimationFrame(loop);
     let count = 0;

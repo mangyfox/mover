@@ -1,5 +1,9 @@
 <script>
 
+  /**
+   * Template for Canvas based animation.
+   */
+
   import { onMount } from 'svelte';
 	let canvas;
   let startTime, previousTime, elapsed, delta;

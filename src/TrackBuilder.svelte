@@ -1,4 +1,12 @@
 <script>
+
+  /**
+   * Useful tool for plotting out track data.
+   *
+   * The plotted data can be used to create new tracks.
+   *
+   * See ./util/tracks/classic.js
+   */
   import Point from './util/Point.js';
   import { onMount } from 'svelte';
 

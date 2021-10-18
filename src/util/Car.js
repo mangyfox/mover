@@ -1,7 +1,11 @@
 import Point from './Point.js';
 
 const TAU = Math.PI * 2;
+const WARP = 6;
 
+/**
+ * Class to manage the data for a single Car entity.
+ */
 export default class Car {
 
   constructor(pos = new Point(), rotation = 0, speed = 0, sector = 0) {
@@ -15,26 +19,29 @@ export default class Car {
     this.maxReverse = 5;
   }
 
-  update(controls) {
+  /**
+   * Update Car state based on current control inputs and time delta.
+   */
+  update(controls, dt) {
     let diffSteering = controls.xAxis - this.steering;
-    this.steering += diffSteering * 0.1;
+    this.steering += diffSteering * dt * WARP;
 
     let fr = Math.abs(this.speed) / this.maxSpeed;
     let direction = this.speed < 0 ? -1 : 1;
-    this.rotation += 0.2 * this.steering * direction * fr * (1 - fr);
+    this.rotation += this.steering * direction * fr * (1 - fr) * dt * WARP * 2;
 
     let diffAccel = controls.yAxis - this.accel;
-    this.accel += diffAccel * 0.1;
+    this.accel += diffAccel * dt * WARP;
 
     if (this.accel > 0 && this.speed < this.maxSpeed) {
-      this.speed += 0.1 * this.accel;
+      this.speed += this.accel * dt * WARP;
     }
     if (this.accel < 0 && this.speed > -this.maxReverse) {
-      this.speed += 0.1 * this.accel;
+      this.speed += this.accel * dt * WARP;
     }
 
     // Apply drag.
-    this.speed *= 0.99;
+    this.speed *= (1 - dt * WARP/10);
 
     // Apply steering drag.
     if (Math.abs(this.steering)) {
@@ -46,6 +53,9 @@ export default class Car {
     this.pos.y += this.speed * Math.sin(this.rotation);
   }
 
+  /**
+   * Render the car to the given canvas context.
+   */
   draw(ctx) {
     let p1 = {
       x: 10 * Math.cos(this.rotation),

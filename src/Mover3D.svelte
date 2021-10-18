@@ -1,32 +1,28 @@
 <script>
 
   /**
-   * Main game logic.
+   * Same game logic, but renders to a ThreeJS scene.
    */
 
   import ControlsHandler from './util/ControlsHandler.js';
   import { onMount } from 'svelte';
+  import { createScene, updateScene } from "./util/scene.js";
   import Car from './util/Car.js';
   import Track from './util/Track.js';
   import data from './util/tracks/classic.js';
 
-  // Set up game state.
-  let controlsHandler = new ControlsHandler();
-
-	let foreground;
-  let background;
-  let startTime, previousTime, elapsed, delta;
-
-  const width = 1400;
-  const height = 1000;
+  let canvas;
 
   const track = new Track(data);
   const sectors = track.sectors;
 
-  // Add the car to the last sector.
-  const car = new Car(sectors[sectors.length - 1].center, 0, 0, sectors.length - 1);
-  sectors[car.sector].active = true;
+  const game = {
+    elapsed: 0,
+    track: track,
+    car: new Car(sectors[sectors.length - 1].center, 0, 0, sectors.length - 1),
+  };
 
+  sectors[game.car.sector].active = true;
   let currentSector;
   let currentLap = 0;
   let completedLaps = 0;
@@ -34,13 +30,16 @@
   let lapStart;
   let bestLap;
 
-  // Initialize game loop on load.
-  onMount(() => {
-    const ctxFore = foreground.getContext('2d');
-    const ctxBack = background.getContext('2d');
-		let frame = requestAnimationFrame(loop);
+  const width = 1400;
+  const height = 1000;
 
-    renderBackground(ctxBack);
+  let controlsHandler = new ControlsHandler();
+
+  onMount(() => {
+    createScene(canvas, game);
+
+    let frame = requestAnimationFrame(loop);
+    let startTime, previousTime, dt;
 
     // Browser animation loop.
 		function loop(t) {
@@ -50,21 +49,18 @@
         previousTime = t;
       }
 
-      // Clear the frame.
-      ctxFore.clearRect(0, 0, width, height);
-
-      // Render to canvas.
-      renderForeground(ctxFore);
+      // Update the scene.
+      updateScene(game);
 
       // Update total elapsed time.
-      elapsed = t - startTime;
+      game.elapsed = t - startTime;
 
       // Update current delta.
-      delta = t - previousTime;
+      dt = (t - previousTime) /1000;
 
-      if (delta) {
+      if (dt) {
         // Update state.
-        update(delta/1000);
+        updateState(dt);
       }
 
       // Store the current time.
@@ -79,23 +75,20 @@
 		};
   });
 
-  // Update state based on time
-  const update = (dt) => {
-    car.update(controlsHandler, dt);
+  const updateState = (dt) => {
+    game.car.update(controlsHandler, dt);
 
-    currentSector = car.sector;
+    currentSector = game.car.sector;
 
-    let walls = sectors[currentSector].checkWalls(car.pos);
+    let walls = sectors[currentSector].checkWalls(game.car.pos);
 
-    // Keep the car within track limits.
     if (walls) {
-      car.pos.addThis(walls);
-      car.speed *= 0.95;
+      game.car.pos.addThis(walls);
+      game.car.speed *= 0.95;
     }
 
-    let progress = sectors[currentSector].checkProgress(car.pos);
+    let progress = sectors[currentSector].checkProgress(game.car.pos);
 
-    // Update car progress around the track.
     if (progress) {
       sectors[currentSector].active = false;
       currentSector += progress;
@@ -112,29 +105,17 @@
       }
 
       sectors[currentSector].active = true;
-      car.sector = currentSector;
+      game.car.sector = currentSector;
     }
   }
 
-  // Render the track to the background.
-  const renderBackground = (ctx) => {
-    track.draw(ctx);
-    // track.drawCurved(ctx);
-  }
-
-  // Render the car to the foreground.
-  const renderForeground = (ctx) => {
-    car.draw(ctx);
-  }
-
-  // Update stats when a lap is completed.
   const completeLap = (l) => {
     if (l == 0) {
-      lapStart = elapsed;
+      lapStart = game.elapsed;
     }
     else if (l > completedLaps) {
       completedLaps = l;
-      let lapTime = elapsed - lapStart;
+      let lapTime = game.elapsed - lapStart;
       if (!bestLap || lapTime < bestLap) {
         bestLap = lapTime;
       }
@@ -145,7 +126,7 @@
         },
         ...laps
       ];
-      lapStart = elapsed;
+      lapStart = game.elapsed;
     }
   }
 
@@ -153,8 +134,11 @@
 
 <div class="wrapper">
   <div class="debug">
-    <p><b>←→↑↓</b> Arrow keys to move</p>
-    Elapsed: {(elapsed/1000).toFixed(2)}<br/>
+    Elapsed: {(game.elapsed / 1000).toFixed(2)}<br/>
+    Steering: {game.car.steering.toFixed(2)}<br/>
+    Speed: {game.car.speed.toFixed(2)}<br/>
+    X: {game.car.pos.x.toFixed(2)}<br/>
+    Y: {game.car.pos.y.toFixed(2)}<br/>
     Sector: {currentSector + 1}<br/>
     Lap: {currentLap}<br/>
     Laps: {completedLaps}<br/>
@@ -164,8 +148,7 @@
     {/each}
   </div>
   <div class="game">
-    <canvas id="background" bind:this={background} {width} {height} ></canvas>
-    <canvas id="foreground" bind:this={foreground} {width} {height} ></canvas>
+    <canvas id="canvas" bind:this={canvas} {width} {height} ></canvas>
   </div>
 </div>
 
@@ -175,20 +158,6 @@
     margin: auto;
     width: 1800px;
     max-height: 1000px;
-  }
-
-  .game {
-    position: relative;
-  }
-
-  #background {
-    background: #cfc;
-  }
-
-  #foreground {
-    position: absolute;
-    top: 0;
-    left: 0;
   }
 
   .debug {
