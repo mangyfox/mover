@@ -88,20 +88,25 @@ export default class Sector {
   /**
    * Render this sector to the given canvas context.
    */
-  draw(ctx, first = false) {
+  draw(ctx, offset = new Point(0,0), first = false) {
+    let a = this.a.add(offset);
+    let b = this.b.add(offset);
+    let c = this.c.add(offset);
+    let d = this.d.add(offset);
+
     ctx.beginPath();
     ctx.strokeStyle = '#666';
-    ctx.moveTo(this.a.x, this.a.y);
+    ctx.moveTo(a.x, a.y);
     ctx.lineWidth = 1;
-    ctx.lineTo(this.c.x, this.c.y);
-    ctx.moveTo(this.b.x, this.b.y);
-    ctx.lineTo(this.d.x, this.d.y);
+    ctx.lineTo(c.x, c.y);
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(d.x, d.y);
     ctx.stroke();
 
     if (first) {
       ctx.lineWidth = 1;
-      ctx.moveTo(this.b.x, this.b.y);
-      ctx.lineTo(this.a.x, this.a.y);
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(a.x, a.y);
       ctx.stroke();
     }
   }

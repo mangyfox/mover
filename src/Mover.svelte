@@ -8,7 +8,8 @@
   import { onMount } from 'svelte';
   import Car from './util/Car.js';
   import Track from './util/Track.js';
-  import data from './util/tracks/classic.js';
+  import data from './util/tracks/long.js';
+  import Point from './util/Point.js';
 
   // Set up game state.
   let controlsHandler = new ControlsHandler();
@@ -19,13 +20,19 @@
 
   const width = 1400;
   const height = 1000;
+  const center = new Point(width / 2, height / 2);
 
   const track = new Track(data);
   const sectors = track.sectors;
+  const limits = track.getLimits(width/2 - 50, height/2 - 50);
+
+  console.log(limits);
 
   // Add the car to the last sector.
   const car = new Car(sectors[sectors.length - 1].center, 0, 0, sectors.length - 1);
   sectors[car.sector].active = true;
+
+  const camera = new Point(car.pos.x, car.pos.y);
 
   let currentSector;
   let currentLap = 0;
@@ -40,8 +47,6 @@
     const ctxBack = background.getContext('2d');
 		let frame = requestAnimationFrame(loop);
 
-    renderBackground(ctxBack);
-
     // Browser animation loop.
 		function loop(t) {
       // Initialise start time.
@@ -52,6 +57,9 @@
 
       // Clear the frame.
       ctxFore.clearRect(0, 0, width, height);
+
+      // Render the background.
+      renderBackground(ctxFore);
 
       // Render to canvas.
       renderForeground(ctxFore);
@@ -114,17 +122,29 @@
       sectors[currentSector].active = true;
       car.sector = currentSector;
     }
+
+    // Move the camera.
+    let diff = Point.diff(camera, car.pos);
+    diff.multThis(0.05);
+    camera.addThis(diff);
+
+    camera.x = camera.x > limits.xMax ? limits.xMax : camera.x;
+    camera.x = camera.x < limits.xMin ? limits.xMin : camera.x;
+    camera.y = camera.y > limits.yMax ? limits.yMax : camera.y;
+    camera.y = camera.y < limits.yMin ? limits.yMin : camera.y;
   }
 
   // Render the track to the background.
   const renderBackground = (ctx) => {
-    track.draw(ctx);
+    let offset = Point.diff(camera, center);
+    track.draw(ctx, offset);
     // track.drawCurved(ctx);
   }
 
   // Render the car to the foreground.
   const renderForeground = (ctx) => {
-    car.draw(ctx);
+    let offset = Point.diff(camera, center);
+    car.draw(ctx, offset);
   }
 
   // Update stats when a lap is completed.

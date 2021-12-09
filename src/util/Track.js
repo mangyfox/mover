@@ -39,11 +39,31 @@ export default class Track {
   }
 
   /**
+   * Get the maximum limits of the track.
+   */
+  getLimits(xBuffer = 0, yBuffer = 0) {
+    let xMax, xMin, yMax, yMin;
+    this.points.forEach(p => {
+      xMax = !xMax || (p.x > xMax) ? p.x : xMax;
+      xMin = !xMin || (p.x < xMin) ? p.x : xMin;
+      yMax = !yMax || (p.y > yMax) ? p.y : yMax;
+      yMin = !yMin || (p.y < yMin) ? p.y : yMin;
+    });
+
+    return {
+      xMax: xMax - xBuffer,
+      xMin: xMin + xBuffer,
+      yMax: yMax - yBuffer,
+      yMin: yMin + yBuffer
+    };
+  }
+
+  /**
    * Render the whole track to the specified canvas context.
    */
-  draw(ctx) {
+  draw(ctx, offset = new Point(0,0)) {
     this.sectors.forEach((sector, id) => {
-      sector.draw(ctx, id === 0);
+      sector.draw(ctx, offset, id === 0);
     });
   }
 

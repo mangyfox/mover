@@ -17,6 +17,10 @@
   const width = 1400;
   const height = 1000;
   let output = '[\n]';
+  let panning = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  let zoom = 1;
 
   const points = [];
 
@@ -25,9 +29,38 @@
   });
 
   const clickHandler = (e) => {
-    points.push(new Point(e.layerX, e.layerY));
+    points.push(new Point((e.layerX - offsetX) * zoom, (e.layerY - offsetY) * zoom));
     draw();
     updateOutput();
+  }
+
+  const rightClickHandler = (e) => {
+    panning = true;
+  }
+
+  const undoHandler = () => {
+    points.pop();
+    draw();
+    updateOutput();
+  }
+
+  const mouseUpHandler = () => {
+    panning = false;
+  }
+
+  const mouseMoveHandler = (e) => {
+    if (!panning) {
+      return;
+    }
+    offsetX += e.movementX / zoom;
+    offsetY += e.movementY / zoom;
+    draw();
+  }
+
+  // Needs more maths.
+  const mouseWheelHandler = (e) => {
+    //zoom *= (1000 + e.wheelDelta) / 1000;
+    //draw();
   }
 
   const draw = () => {
@@ -35,12 +68,9 @@
     ctx.clearRect(0, 0, width, height);
 
     points.forEach((p, index) => {
-      if (index % 2) {
-
-      }
       ctx.beginPath();
       ctx.strokeStyle = '#111';
-      ctx.arc(p.x, p.y, 3, 0, TAU);
+      ctx.arc((p.x + offsetX) * zoom, (p.y + offsetY) * zoom, 3, 0, TAU);
       ctx.stroke();
     });
   }
@@ -55,11 +85,27 @@
 
 </script>
 
+<svelte:body on:mouseup={mouseUpHandler} />
 <div class="wrapper">
-  <pre class="output">
-    {output}
-  </pre>
-  <canvas id="canvas" bind:this={canvas} {width} {height} on:click={clickHandler}>No canvas</canvas>
+  <div class="output">
+    <button id="undo" on:click={undoHandler}>Undo</button><br/>
+    Offset X: {offsetX}<br/>
+    Offset Y: {offsetY}<br/>
+    Panning: {panning}<br/>
+    Zoom: {zoom}<br/>
+    <pre>
+      {output}
+    </pre>
+  </div>
+  <canvas
+    id="canvas"
+    bind:this={canvas}
+    {width}
+    {height}
+    on:click={clickHandler}
+    on:contextmenu|preventDefault={rightClickHandler}
+    on:wheel|preventDefault={mouseWheelHandler}
+    on:mousemove={mouseMoveHandler}>No canvas</canvas>
 </div>
 
 <style>
@@ -82,5 +128,9 @@
     padding: 1rem;
     flex: 1;
     overflow-y: scroll;
+  }
+
+  button {
+    cursor: pointer;
   }
 </style>
