@@ -1,10 +1,11 @@
 <script>
 	import Mover from './Mover.svelte';
-	import Mover3D from './Mover3D.svelte';
 	import TrackBuilder from './TrackBuilder.svelte';
+	import ControlsHandlerDebug from './ControlsHandlerDebug.svelte';
 
 	//Toggle this to enable track creation.
 	let editing = false;
+	let controls = true;
 </script>
 
 <main>
@@ -12,6 +13,8 @@
 
 	{#if editing}
 		<TrackBuilder />
+	{:else if controls}
+		<ControlsHandlerDebug />
 	{:else}
 		<Mover />
 	{/if}

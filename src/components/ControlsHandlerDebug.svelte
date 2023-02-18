@@ -4,11 +4,12 @@
    * Debug component to test the ControlsHandler.
    */
 
-  export let controlsHandler;
-
   import { onMount } from 'svelte';
+  import ControlsHandler from './util/ControlsHandler.js';
 
   const TAU = Math.PI * 2;
+
+  let controlsHandler = new ControlsHandler();
 
 	let canvas;
   let x = 0;
